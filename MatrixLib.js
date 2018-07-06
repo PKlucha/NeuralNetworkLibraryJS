@@ -20,7 +20,7 @@ class Matrix {
 		}
 	}
 	multiply(n) {
-		if(n instanceof Matrix){
+		if(n instanceof Matrix) {
 			if(this.rows === n.rows && this.cols === n.cols) {
 				for(var i = 0; i < this.rows; i++) {
 					for(var j = 0; j < this.cols; j++) {
@@ -36,17 +36,17 @@ class Matrix {
 			}
 		}
 	}
-	static dotProduct(a, b){
-		if(a instanceof Matrix && b instanceof Matrix){
-			if(a.rows != b.cols){
+	static dotProduct(a, b) {
+		if(a instanceof Matrix && b instanceof Matrix) {
+			if(a.rows != b.cols) {
 				console.lot("Inappropriate Matrixes dimesions(dotProduct())");
 				return undefined;
 			}
 			let result = new Matrix(a.rows, b.cols);
-			for(let i = 0; i < result.rows; i++){
-				for(let j = 0; j < result.cols; j++){
+			for(let i = 0; i < result.rows; i++) {
+				for(let j = 0; j < result.cols; j++) {
 					let sum = 0;
-					for(let k = 0; k < a.cols; k++){
+					for(let k = 0; k < a.cols; k++) {
 						sum += a.data[i][k] * b.data[k][j];
 					}
 					result.data[i][j] = sum;
@@ -58,7 +58,7 @@ class Matrix {
 		}
 	}
 	add(n) {
-		if(n instanceof Matrix){
+		if(n instanceof Matrix) {
 			if(this.rows === n.rows && this.cols === n.cols) {
 				for(var i = 0; i < this.rows; i++) {
 					for(var j = 0; j < this.cols; j++) {
@@ -91,7 +91,7 @@ class Matrix {
 			}	
 		}
 	}
-	print(){
+	print() {
 		console.table(this.data);
 	}
 }
