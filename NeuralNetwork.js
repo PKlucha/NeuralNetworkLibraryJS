@@ -27,8 +27,10 @@ class NeuralNetwork {
 			for(let j = 0; j < topology.netOutNum; j++){
 				this.net[i].push(new Neuron(topology.topology[i-1]));
 			}
+			this.error = new Array(this.net.length - 1);
 		} else {
 			console.log("Wrong input parameter in NN constructor!");
+			return undefined;
 		}
 	}
 
@@ -73,25 +75,24 @@ class NeuralNetwork {
 			console.table(this.output);
 
 			// Calculating error for every layer exept input layer
-			let error = new Array(this.net.length - 1);
-			for(let i = 0; i < error.length; i++) {
-				error[i] = [];
+			for(let i = 0; i < this.error.length; i++) {
+				this.error[i] = [];
 			}
 			for(let i = 0; i < this.net[this.net.length - 1].length; i++) {
-				error[error.length - 1].push(answer[i] - this.output[i]);
+				this.error[this.error.length - 1].push(answer[i] - this.output[i]);
 			}
 			for(let i = this.net.length - 2; i > 0; i--) {
 				for(let j = 0; j < this.net[i].length; j++) {
 					let err = 0;
 					for(let k = 0; k < this.net[i+1].length; k++) {
-						err += error[i][k] * this.net[i+1][k].inputWeights[j];
+						err += this.error[i][k] * this.net[i+1][k].inputWeights[j];
 					}
-					error[i - 1].push(err);
+					this.error[i - 1].push(err);
 				}
 			}
 
 			console.log("Error:");
-			console.table(error);
+			console.table(this.error);
 		}
 	}
 }
