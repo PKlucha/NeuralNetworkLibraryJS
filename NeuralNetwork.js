@@ -6,15 +6,16 @@ class Topology {
 }
 
 class NeuralNetwork {
-	constructor(topology){
-		if(topology instanceof Topology){
+	constructor(topology) {
+		if(topology instanceof Topology) {
 			this.output = [];
+			this.lr = 0.05;
 			// Constructing 2D net of Neurons
 			this.net = [];
 			let i = 0;
 			while(i < topology.topology.length) {
 				this.net[i] = [];
-				for(let j = 0; j < topology.topology[i]; j++){
+				for(let j = 0; j < topology.topology[i]; j++) {
 					if(i === 0) {
 						this.net[i].push(new Neuron(0));
 					} else {
@@ -24,7 +25,7 @@ class NeuralNetwork {
 				i++;
 			}
 			this.net[i] = [];
-			for(let j = 0; j < topology.netOutNum; j++){
+			for(let j = 0; j < topology.netOutNum; j++) {
 				this.net[i].push(new Neuron(topology.topology[i-1]));
 			}
 			this.error = new Array(this.net.length - 1);
@@ -33,15 +34,14 @@ class NeuralNetwork {
 			return undefined;
 		}
 	}
-
-	feedForward(input_array){
+	feedForward(input_array) {
 		if(this.net[0].length != input_array.length) {
 			console.log("Input arrays length must be equal to first layers length (NN.feedForward)");
 			return udefined;
 		} else {
+			this.output = [];
 		// Seting inputs in first layer
 			let inputs = Matrix.fromArray(input_array);
-			let output = [];
 			if(inputs.rows === this.net[0].length) {
 				for(let i = 0; i < inputs.rows; i++) {
 					this.net[0][i].setOutputValue(inputs.data[i][0]);
@@ -94,5 +94,20 @@ class NeuralNetwork {
 			console.log("Error:");
 			console.table(this.error);
 		}
+	}
+	train(input_array, answer) {
+		this.calculateError(input_array, answer);
+		for(let i = this.net.length - 1; i > 0; i--) {
+			for(let j = 0; j < this.net[i].length; j++) {
+				for(let k = 0; k < this.net[i-1].length; k++) {
+					this.net[i][j].inputWeights[k] += this.lr * this.net[i-1][k].outValue 
+						* this.error[i - 1][j] * Neuron.activactionFunctionD(this.net[i-1][k].outValue);
+				}
+				this.net[i][j].bias += this.lr * this.error[i - 1][j];
+			}
+		}
+	}
+	setLearningRate(lr) {
+		this.lr = lr;
 	}
 }
