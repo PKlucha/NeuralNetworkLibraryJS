@@ -19,6 +19,7 @@ class Matrix {
 			}	
 		}
 	}
+	// Scalar and dot product
 	multiply(n) {
 		if(n instanceof Matrix){
 			if(this.rows === n.rows && this.cols === n.cols) {
@@ -36,6 +37,7 @@ class Matrix {
 			}
 		}
 	}
+	// Matrix multiplication
 	static multiply(a, b) {
 		if(a instanceof Matrix && b instanceof Matrix){
 			if(a.cols != b.rows){
@@ -103,7 +105,8 @@ class Matrix {
 			}	
 		}
 	}
-	static map(matrix, fun) { // Applies function to every single element in data matrix
+	// Applies function to every single element in data matrix
+	static map(matrix, fun) {
 		let result = new Matrix(matrix.rows, matrix.cols);
 		for(var i = 0; i < result.rows; i++) {
 			for(var j = 0; j < result.cols; j++) {
