@@ -1,113 +1,89 @@
-class Topology {
-	constructor(netOutNum) {
-		this.netOutNum = netOutNum;
-		this.topology = [];
-	}
+function sigmoid(x) {
+	return 1 / (1 + Math.exp(-x));
+}
+function dsigmoid(x) {
+	return x * (1 - x);
 }
 
 class NeuralNetwork {
-	constructor(topology) {
-		if(topology instanceof Topology) {
-			this.output = [];
-			this.lr = 0.05;
-			// Constructing 2D net of Neurons
-			this.net = [];
-			let i = 0;
-			while(i < topology.topology.length) {
-				this.net[i] = [];
-				for(let j = 0; j < topology.topology[i]; j++) {
-					if(i === 0) {
-						this.net[i].push(new Neuron(0));
-					} else {
-						this.net[i].push(new Neuron(topology.topology[i-1]));
-					}
-				}
-				i++;
-			}
-			this.net[i] = [];
-			for(let j = 0; j < topology.netOutNum; j++) {
-				this.net[i].push(new Neuron(topology.topology[i-1]));
-			}
-			this.error = new Array(this.net.length - 1);
-		} else {
-			console.log("Wrong input parameter in NN constructor!");
-			return undefined;
-		}
+	constructor(input_nodes, hidden_nodes, output_nodes) {
+		this.input_nodes = input_nodes;
+		this.hidden_nodes = hidden_nodes;
+		this.output_nodes = output_nodes;
+		
+		this.weights_ih = new Matrix(this.hidden_nodes, this.input_nodes);
+		this.weights_ho = new Matrix(this.output_nodes, this.hidden_nodes);
+		this.weights_ih.randomize();
+		this.weights_ho.randomize();
+
+		this.bias_h = new Matrix(this.hidden_nodes, 1);
+		this.bias_o = new Matrix(this.output_nodes, 1);
+		this.bias_h.randomize();
+		this.bias_o.randomize();
+
+		this.learning_rate = 0.1;
 	}
+
 	feedForward(input_array) {
-		if(this.net[0].length != input_array.length) {
-			console.log("Input arrays length must be equal to first layers length (NN.feedForward)");
-			return udefined;
-		} else {
-			this.output = [];
-		// Seting inputs in first layer
-			let inputs = Matrix.fromArray(input_array);
-			if(inputs.rows === this.net[0].length) {
-				for(let i = 0; i < inputs.rows; i++) {
-					this.net[0][i].setOutputValue(inputs.data[i][0]);
-				}
-			} else {
-				console.log("Wrong inputs array size!");
-				return undefined;
-			}
-			// Calling feedForward for every single neuron starting from second layer (first are inputs)
-			for(let i = 1; i < this.net.length; i++) {
-				for(let j = 0; j < this.net[i].length; j++) {
-					this.net[i][j].feedForward(this.net[i-1]);
-				}
-			}
-		}
-	}
-	calculateError(input_array, answer) {
-		if(this.net[0].length != input_array.length) {
-			console.log("Input arrays length must be equal to first layers length (NN.train)");
-			return undefined;
-		} else if(this.net[this.net.length - 1].length != answer.length) {
-			console.log("Known answer array must be the same length as last layers length (NN.train)");
-			return undefined;
-		} else {
-			this.feedForward(input_array);
-			for(let i = 0; i < this.net[this.net.length - 1].length; i++) {
-				this.output.push(this.net[this.net.length - 1][i].outValue);
-			}
+		let inputs = Matrix.fromArray(input_array);
 
-			console.log("Output:");
-			console.table(this.output);
+		// Generating the hidden outputs
+		let hidden = Matrix.multiply(this.weights_ih, inputs);
+		hidden.add(this.bias_h);
+		hidden.map(sigmoid);
 
-			// Calculating error for every layer exept input layer
-			for(let i = 0; i < this.error.length; i++) {
-				this.error[i] = [];
-			}
-			for(let i = 0; i < this.net[this.net.length - 1].length; i++) {
-				this.error[this.error.length - 1].push(answer[i] - this.output[i]);
-			}
-			for(let i = this.net.length - 2; i > 0; i--) {
-				for(let j = 0; j < this.net[i].length; j++) {
-					let err = 0;
-					for(let k = 0; k < this.net[i+1].length; k++) {
-						err += this.error[i][k] * this.net[i+1][k].inputWeights[j];
-					}
-					this.error[i - 1].push(err);
-				}
-			}
+		// Generating the output's output
+		let output = Matrix.multiply(this.weights_ho, hidden);
+		output.add(this.bias_o);
+		output.map(sigmoid);
 
-			console.log("Error:");
-			console.table(this.error);
-		}
+		return output.toArray();
 	}
-	train(input_array, answer) {
-		this.calculateError(input_array, answer);
-		for(let i = this.net.length - 1; i > 0; i--) {
-			for(let j = 0; j < this.net[i].length; j++) {
-				for(let k = 0; k < this.net[i-1].length; k++) {
-					this.net[i][j].inputWeights[k] += this.lr * this.net[i-1][k].outValue 
-						* this.error[i - 1][j] * Neuron.activactionFunctionD(this.net[i-1][k].outValue);
-				}
-				this.net[i][j].bias += this.lr * this.error[i - 1][j];
-			}
-		}
+
+	train(input_array, target_array) {
+		// Generating the hidden outputs
+		let inputs = Matrix.fromArray(input_array);
+
+		let hidden = Matrix.multiply(this.weights_ih, inputs);
+		hidden.add(this.bias_h);
+		hidden.map(sigmoid);
+
+		// Generating the output's output
+		let outputs = Matrix.multiply(this.weights_ho, hidden);
+		outputs.add(this.bias_o);
+		outputs.map(sigmoid);
+
+		let targets = Matrix.fromArray(target_array);
+
+		// Calculating error
+		let output_errors = Matrix.subtract(targets, outputs);
+		
+		let gradients = Matrix.map(outputs, dsigmoid);
+		gradients.multiply(output_errors);
+		gradients.multiply(this.learning_rate);
+
+		// Calculating hidden layer errors
+		let hidden_T = Matrix.transpose(hidden);
+		let weights_ho_deltas = Matrix.multiply(gradients, hidden_T);
+
+		// Adjusting hidden->output
+		this.weights_ho.add(weights_ho_deltas);
+		this.bias_o.add(gradients);
+
+		let who_T = Matrix.transpose(this.weights_ho);
+		let hidden_errors = Matrix.multiply(who_T, output_errors);
+
+		// Calculating hidden gradient
+		let hidden_gradient = Matrix.map(hidden, dsigmoid);
+		hidden_gradient.multiply(hidden_errors);
+		hidden_gradient.multiply(this.learning_rate);
+
+		// Calculate ih deltas
+		let inputs_T = Matrix.transpose(inputs);
+		let weights_ih_deltas = Matrix.multiply(hidden_gradient, inputs_T);
+
+		// Adjusting input->hidden
+		this.weights_ih.add(weights_ih_deltas);
+		this.bias_h.add(hidden_gradient);
 	}
-	setLearningRate(lr) {
-		this.lr = lr;
-	}
-}
+} 
