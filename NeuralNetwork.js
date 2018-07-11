@@ -1,6 +1,7 @@
 function sigmoid(x) {
 	return 1 / (1 + Math.exp(-x));
 }
+// Derivative of sigmoid (paramiter is already maped by sigmoid!)
 function dsigmoid(x) {
 	return x * (1 - x);
 }
