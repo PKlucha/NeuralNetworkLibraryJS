@@ -59,6 +59,7 @@ class Matrix {
 			console.log("Paramiters must be Matrixes (Matrix.dotProduct())");
 		}
 	}
+	// Scalar and dot addition
 	add(n) {
 		if(n instanceof Matrix){
 			if(this.rows === n.rows && this.cols === n.cols) {
